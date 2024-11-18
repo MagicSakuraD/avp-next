@@ -14,6 +14,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import LeafletMap from "@/app/dashboard/LeafletMap";
+import { Button } from "@/components/ui/button";
 
 const points: Array<[number, number]> = [];
 
@@ -45,7 +46,10 @@ export default function Page() {
           <div className="grid auto-rows-min gap-4 md:grid-cols-3">
             <LeafletMap points={points} />
           </div>
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+          {/* <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" /> */}
+          <div className="flex flex-row justify-evenly items-center">
+            <Button>自动泊入</Button> <Button>自动泊出</Button>
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

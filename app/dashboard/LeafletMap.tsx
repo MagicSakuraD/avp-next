@@ -49,7 +49,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ points }) => {
       minZoom={3}
       maxZoom={8}
       scrollWheelZoom={true}
-      className="rounded-lg w-full h-[30rem]"
+      className="rounded-lg w-full h-[45rem]"
     >
       <ImageOverlay url={mapImage} bounds={bounds} />
       <MyClick />
