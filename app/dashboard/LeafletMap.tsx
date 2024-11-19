@@ -1,8 +1,7 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import L from "leaflet";
 import {
-  ImageOverlay,
   MapContainer,
   Marker,
   Polyline,
@@ -24,35 +23,71 @@ function MyClick() {
   return null;
 }
 
-interface LeafletMapProps {
-  points: [number, number][];
+interface GeoJSONFeature {
+  type: string;
+  properties: {
+    Type: string;
+    Id: string;
+    Name?: string;
+    Function?: string;
+    EntryPosition?: [number, number];
+  };
+  geometry: {
+    type: string;
+    coordinates: [number, number, number][] | [number, number, number][][];
+  };
 }
 
-const LeafletMap: React.FC<LeafletMapProps> = ({ points }) => {
-  const [mapImage] = useState<string>("/baidu.png");
+interface GeoJSONData {
+  type: string;
+  features: GeoJSONFeature[];
+}
 
-  // Define fixed bounds for the image
-  const bounds: [[number, number], [number, number]] = [
-    [0, 0],
-    [1000, 1000], // Adjust these values based on your image dimensions and desired scale
-  ];
+interface LeafletMapProps {
+  points: [number, number][];
+  geoJsonPath?: string;
+}
+
+const entryPointIcon = L.icon({
+  iconUrl: "/dot.png",
+  iconSize: [15, 15],
+});
+
+const LeafletMap: React.FC<LeafletMapProps> = ({ points, geoJsonPath }) => {
+  const [geoJsonData, setGeoJsonData] = useState<GeoJSONData | null>(null);
+
+  useEffect(() => {
+    if (geoJsonPath) {
+      fetch(geoJsonPath)
+        .then((response) => response.json())
+        .then((data) => {
+          setGeoJsonData(data);
+        })
+        .catch((error) => console.error("Error loading GeoJSON:", error));
+    }
+  }, [geoJsonPath]);
 
   const customIcon = L.icon({
     iconUrl: "/dot.png",
     iconSize: [20, 20],
   });
 
+  // Helper function to convert 3D coordinates to 2D
+  const convert3Dto2D = (coord: [number, number, number]): [number, number] => {
+    return [coord[1], coord[0]];
+  };
+
   return (
     <MapContainer
-      center={[0, 0]} // Center point adjusted to match the bounds
-      zoom={5}
+      center={[22.743663, 113.580362]} // 更新为实际的中心点坐标
+      zoom={18} // 调整缩放级别
       minZoom={3}
-      maxZoom={8}
+      maxZoom={24}
       scrollWheelZoom={true}
-      className="rounded-lg w-full h-[45rem]"
+      className="rounded-lg w-full h-[36rem]"
     >
-      <ImageOverlay url={mapImage} bounds={bounds} />
       <MyClick />
+
       {points.length > 1 && (
         <>
           <Polyline
@@ -70,8 +105,69 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ points }) => {
           </Marker>
         </>
       )}
+
+      {geoJsonData?.features.map((feature, index) => {
+        if (
+          feature.properties.Type === "Lane" ||
+          feature.properties.Type === "LaneBoundary"
+        ) {
+          const coordinates = (
+            feature.geometry.coordinates as [number, number, number][]
+          ).map(convert3Dto2D);
+          return (
+            <React.Fragment key={`lane-${index}`}>
+              <Polyline
+                pathOptions={{ color: "#000000", weight: 2 }}
+                positions={coordinates}
+              >
+                <Popup>{feature.properties.Id}</Popup>
+              </Polyline>
+            </React.Fragment>
+          );
+        }
+
+        if (feature.properties.Type === "ParkingSpace") {
+          const coordinates = (
+            feature.geometry.coordinates as [number, number, number][][]
+          )[0].map(convert3Dto2D);
+          return (
+            <React.Fragment key={`parking-${index}`}>
+              <Polyline
+                pathOptions={{ color: "#0000FF", weight: 2 }}
+                positions={coordinates}
+              >
+                <Popup>{feature.properties.Id}</Popup>
+              </Polyline>
+              {feature.properties.EntryPosition && (
+                <Marker
+                  position={[
+                    feature.properties.EntryPosition[1],
+                    feature.properties.EntryPosition[0],
+                  ]}
+                  icon={entryPointIcon}
+                >
+                  <Popup>
+                    <div>
+                      <p>ID: {feature.properties.Id}</p>
+                      {feature.properties.Name && (
+                        <p>Name: {feature.properties.Name}</p>
+                      )}
+                      {feature.properties.Function && (
+                        <p>Function: {feature.properties.Function}</p>
+                      )}
+                    </div>
+                  </Popup>
+                </Marker>
+              )}
+            </React.Fragment>
+          );
+        }
+
+        return null;
+      })}
+
       <ScaleControl position="bottomleft" metric={true} imperial={false} />
-      <MapMarker data={[1, 1]} angle={1 * 45} />
+      <MapMarker data={[113, 22]} angle={1 * 45} />
     </MapContainer>
   );
 };
