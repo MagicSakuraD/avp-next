@@ -44,16 +44,25 @@ interface GeoJSONData {
 }
 
 interface LeafletMapProps {
-  points: [number, number][];
+  points?: [number, number][];
   geoJsonPath?: string;
+  carInfo?: {
+    x: number;
+    y: number;
+    yaw: number;
+  };
 }
 
 const entryPointIcon = L.icon({
-  iconUrl: "/dot.png",
+  iconUrl: "/info.svg",
   iconSize: [15, 15],
 });
 
-const LeafletMap: React.FC<LeafletMapProps> = ({ points, geoJsonPath }) => {
+const LeafletMap: React.FC<LeafletMapProps> = ({
+  points,
+  geoJsonPath,
+  carInfo,
+}) => {
   const [geoJsonData, setGeoJsonData] = useState<GeoJSONData | null>(null);
 
   useEffect(() => {
@@ -80,8 +89,8 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ points, geoJsonPath }) => {
   return (
     <MapContainer
       center={[22.743663, 113.580362]} // 更新为实际的中心点坐标
-      zoom={18} // 调整缩放级别
-      minZoom={3}
+      zoom={20} // 调整缩放级别
+      minZoom={18}
       maxZoom={24}
       scrollWheelZoom={true}
       className="rounded-lg w-full h-[36rem]"
@@ -167,7 +176,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({ points, geoJsonPath }) => {
       })}
 
       <ScaleControl position="bottomleft" metric={true} imperial={false} />
-      <MapMarker data={[113, 22]} angle={1 * 45} />
+      <MapMarker data={[carInfo!.x, carInfo!.y]} angle={carInfo!.yaw} />
     </MapContainer>
   );
 };

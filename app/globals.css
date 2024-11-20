@@ -96,3 +96,7 @@ body {
 .leaflet-control-attribution {
   display: none;
 }
+
+.leaflet-container {
+  z-index: 10;
+}
