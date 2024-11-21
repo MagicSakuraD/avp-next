@@ -61,7 +61,7 @@ export default function useMqtt(values: ValuesTpye) {
         ...prev,
         [topic]: messageString,
       }));
-      console.log(`Received message on topic ${topic}:`, messageString);
+      // console.log(`Received message on topic ${topic}:`, messageString);
     });
 
     return () => {

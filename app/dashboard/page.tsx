@@ -21,6 +21,7 @@ import useMqtt from "@/lib/mqtt";
 import {
   Dialog,
   DialogContent,
+  DialogClose,
   DialogDescription,
   DialogFooter,
   DialogHeader,
@@ -34,14 +35,18 @@ import { useToast } from "@/hooks/use-toast";
 export default function Page() {
   const [isParkInDialogOpen, setIsParkInDialogOpen] = useState(false);
   const [isParkOutDialogOpen, setIsParkOutDialogOpen] = useState(false);
-  const [licensePlate, setLicensePlate] = useState("");
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [licensePlate, setLicensePlate] = useState("LMWS81S56N1S00011");
+  const [isShow, setIsShow] = useState(false);
   const { toast } = useToast();
   const [points, setPoints] = useState<Array<[number, number]>>([]);
-  const [carInfo, setCarInfo] = useState({
-    x: 113,
-    y: 22,
-    yaw: 0,
+  const [carInfo, setCarInfo] = useState<{
+    x: number | null;
+    y: number | null;
+    yaw: number | null;
+  }>({
+    x: null,
+    y: null,
+    yaw: null,
   });
 
   const mqttConfig = {
@@ -84,16 +89,14 @@ export default function Page() {
 
     // 发布消息
     if (connectionStatus.connected) {
-      publish(
-        `/cc/req/park_in/${licensePlate}/${mqttConfig.password}`,
-        JSON.stringify(payload)
-      );
+      publish(`/cc/req/park_in/${licensePlate}/111`, JSON.stringify(payload));
       toast({
         title: "成功",
         description: "泊入请求已发送",
       });
-      setIsDialogOpen(false);
-      setLicensePlate(""); // 清空输入
+
+      // setLicensePlate(""); // 清空输入
+      setIsShow(true);
     } else {
       toast({
         title: "错误",
@@ -102,24 +105,8 @@ export default function Page() {
       });
     }
 
-    subscribe(`/ec/ind/vehicle_localization/${licensePlate}/111`);
-
-    if (messages) {
-      Object.entries(messages).forEach(([topic, message]) => {
-        try {
-          const parsedMessage = JSON.parse(message);
-          if (parsedMessage.payload && parsedMessage.payload.x && parsedMessage.payload.y) {
-            setCarInfo({
-              x: parsedMessage.payload.x,
-              y: parsedMessage.payload.y,
-              yaw: parsedMessage.payload.yaw,
-            });
-          }
-        } catch (error) {
-          console.error("Failed to parse message:", error);
-        }
-      });
-    }
+    // 提交完成后，关闭对话框
+    setIsParkInDialogOpen(false);
   };
   // 泊车
   const handleParkOut = (e: React.FormEvent) => {
@@ -151,16 +138,14 @@ export default function Page() {
 
     // 发布消息
     if (connectionStatus.connected) {
-      publish(
-        `/cc/req/park_out/${licensePlate}/${mqttConfig.password}`,
-        JSON.stringify(payload)
-      );
+      publish(`/cc/req/park_out/${licensePlate}/111`, JSON.stringify(payload));
       toast({
         title: "成功",
         description: "泊出请求已发送",
       });
-      setIsDialogOpen(false);
-      setLicensePlate(""); // 清空输入
+
+      // setLicensePlate(""); // 清空输入
+      setIsShow(true);
     } else {
       toast({
         title: "错误",
@@ -168,7 +153,56 @@ export default function Page() {
         variant: "destructive",
       });
     }
+
+    // 提交完成后，关闭对话框
+    setIsParkOutDialogOpen(false);
   };
+
+  useEffect(() => {
+    if (connectionStatus.connected) {
+      console.log("connected subscribe");
+      subscribe(`/ec/ind/vehicle_localization/${licensePlate}/111`);
+      subscribe(`/ec/ind/new_route/${licensePlate}/111`);
+    }
+
+    return () => {
+      unsubscribe(`/ec/ind/vehicle_localization/${licensePlate}/111`);
+      unsubscribe(`/ec/ind/new_route/${licensePlate}/111`);
+    };
+  }, [isShow]);
+
+  useEffect(() => {
+    if (messages) {
+      Object.entries(messages).forEach(([topic, message]) => {
+        try {
+          const parsedMessage = JSON.parse(message);
+
+          if (topic === `/ec/ind/vehicle_localization/${licensePlate}/111`) {
+            if (
+              parsedMessage.payload &&
+              parsedMessage.payload.x &&
+              parsedMessage.payload.y
+            ) {
+              setCarInfo({
+                x: parsedMessage.payload.x,
+                y: parsedMessage.payload.y,
+                yaw: parsedMessage.payload.yaw,
+              });
+            }
+          } else if (topic === `/ec/ind/new_route/${licensePlate}/111`) {
+            if (parsedMessage.payload && parsedMessage.payload.path) {
+              const newPoints = parsedMessage.payload.path.map(
+                (point: { x: number; y: number }) => [point.x, point.y]
+              );
+              setPoints(newPoints);
+            }
+          }
+        } catch (error) {
+          console.error("Failed to parse message:", error);
+        }
+      });
+    }
+  }, [messages]);
 
   return (
     <SidebarProvider>
@@ -184,15 +218,20 @@ export default function Page() {
                 </BreadcrumbItem>
                 <BreadcrumbSeparator className="hidden md:block" />
                 <BreadcrumbItem>
-                  <BreadcrumbPage>自主代客泊车</BreadcrumbPage>
+                  <BreadcrumbPage className="font-semibold	">
+                    自主代客泊车
+                  </BreadcrumbPage>
                 </BreadcrumbItem>
               </BreadcrumbList>
             </Breadcrumb>
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0 container mx-auto">
-
-          <LeafletMap points={points} geoJsonPath="/zjw0515.geojson" carInfo = {carInfo}/>
+          <LeafletMap
+            points={points}
+            geoJsonPath="/zjw0515.geojson"
+            carInfo={carInfo}
+          />
 
           <div className="flex flex-row justify-evenly items-center">
             <Dialog
@@ -241,7 +280,10 @@ export default function Page() {
               onOpenChange={setIsParkOutDialogOpen}
             >
               <DialogTrigger asChild>
-                <Button onClick={() => setIsParkInDialogOpen(false)}>
+                <Button
+                  onClick={() => setIsParkInDialogOpen(false)}
+                  variant={"secondary"}
+                >
                   自动泊出
                 </Button>
               </DialogTrigger>

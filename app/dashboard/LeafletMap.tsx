@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 "use client";
 import React, { useState, useEffect } from "react";
 import L from "leaflet";
@@ -8,9 +9,33 @@ import {
   Popup,
   ScaleControl,
   useMapEvent,
+  useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import MapMarker from "./MapMarker";
+
+// Create a new component for the flyTo effect
+function FlyToPoint({ point }: { point: [number, number] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (point) {
+      map.flyTo(point, map.getZoom(), {});
+    }
+  }, [map, point]);
+
+  return null;
+}
+
+function SetViewOnPoint({ point }: { point: [number, number] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    map.setView(point, map.getZoom());
+  }, [map, point]);
+
+  return null;
+}
 
 function MyClick() {
   const map = useMapEvent("click", (e) => {
@@ -47,9 +72,9 @@ interface LeafletMapProps {
   points?: [number, number][];
   geoJsonPath?: string;
   carInfo?: {
-    x: number;
-    y: number;
-    yaw: number;
+    x: number | null;
+    y: number | null;
+    yaw: number | null;
   };
 }
 
@@ -82,29 +107,38 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
   });
 
   // Helper function to convert 3D coordinates to 2D
-  const convert3Dto2D = (coord: [number, number, number]): [number, number] => {
-    return [coord[1], coord[0]];
-  };
+  // const convert3Dto2D = (coord: [number, number, number]): [number, number] => {
+  //   return [coord[1], coord[0]];
+  // };
 
   return (
     <MapContainer
-      center={[22.743663, 113.580362]} // 更新为实际的中心点坐标
-      zoom={20} // 调整缩放级别
-      minZoom={18}
-      maxZoom={24}
+      // center={[22.743663, 113.580362]} // 更新为实际的中心点坐标
+      center={[-13, -22]} // 更新为实际的中心点坐标
+      zoom={5} // 调整缩放级别
+      minZoom={3}
+      maxZoom={8}
       scrollWheelZoom={true}
+      crs={L.CRS.Simple}
       className="rounded-lg w-full h-[36rem]"
     >
       <MyClick />
 
-      {points.length > 1 && (
+      {points && points.length > 1 && (
         <>
+          {/* <FlyToPoint
+            point={[
+              (points[0][0] + points[points.length - 1][0]) / 2,
+              (points[0][1] + points[points.length - 1][1]) / 2,
+            ]}
+          /> */}
           <Polyline
             pathOptions={{
               color: "#0c0a09",
-              weight: 8,
+              weight: 5,
             }}
             positions={points}
+            smoothFactor={1.0}
           />
           <Marker position={points[0]} icon={customIcon}>
             <Popup>起点</Popup>
@@ -115,7 +149,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
         </>
       )}
 
-      {geoJsonData?.features.map((feature, index) => {
+      {/* {geoJsonData?.features.map((feature, index) => {
         if (
           feature.properties.Type === "Lane" ||
           feature.properties.Type === "LaneBoundary"
@@ -173,10 +207,15 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
         }
 
         return null;
-      })}
+      })} */}
 
       <ScaleControl position="bottomleft" metric={true} imperial={false} />
-      <MapMarker data={[carInfo!.x, carInfo!.y]} angle={carInfo!.yaw} />
+      {carInfo &&
+        carInfo.x !== null &&
+        carInfo.y !== null &&
+        carInfo.yaw !== null && (
+          <MapMarker data={[carInfo.x, carInfo.y]} angle={carInfo.yaw} />
+        )}
     </MapContainer>
   );
 };
