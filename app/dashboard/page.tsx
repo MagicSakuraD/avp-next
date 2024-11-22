@@ -229,7 +229,7 @@ export default function Page() {
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0 container mx-auto">
           <LeafletMap
             points={points}
-            geoJsonPath="/zjw0515.geojson"
+            geoJsonPath="/map.geojson"
             carInfo={carInfo}
           />
 

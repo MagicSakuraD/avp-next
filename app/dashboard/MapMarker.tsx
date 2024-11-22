@@ -19,8 +19,6 @@ export default function MapMarker({ data, angle }: MapMarkerProps) {
   const [prevPos, setPrevPos] = useState([latitude, longitude]);
   const [prevAngle, setPrevAngle] = useState(angle);
 
-  // console.log("latitude", latitude, "longitude", longitude, "angle", angle);
-
   useEffect(() => {
     if (prevPos[1] !== longitude || prevPos[0] !== latitude)
       setPrevPos([latitude, longitude]);
