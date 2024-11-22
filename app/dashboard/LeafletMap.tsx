@@ -66,6 +66,16 @@ const entryPointIcon = L.icon({
   iconSize: [15, 15],
 });
 
+const startPointIcon = L.icon({
+  iconUrl: "/rectangle.png",
+  iconSize: [22, 22],
+});
+
+const customIcon = L.icon({
+  iconUrl: "/dot.png",
+  iconSize: [15, 15],
+});
+
 // 定义原点坐标
 const ORI_LON = 113.580362; // 原点经度
 const ORI_LAT = 22.743663; // 原点纬度
@@ -216,11 +226,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     }
   }, [geoJsonPath]);
 
-  const customIcon = L.icon({
-    iconUrl: "/dot.png",
-    iconSize: [20, 20],
-  });
-
   return (
     <MapContainer
       center={[10, 10]} // 地图中心点（可调整）
@@ -245,11 +250,11 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
           />
           <Marker
             position={transformCRS(points[0][0], points[0][1])}
-            icon={customIcon}
+            icon={startPointIcon}
           >
             {" "}
             {/* 起点镜像 */}
-            {/* <Popup>起点</Popup> */}
+            <Popup>起点</Popup>
           </Marker>
           <Marker
             position={transformCRS(
@@ -260,7 +265,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
           >
             {" "}
             {/* 终点镜像 */}
-            {/* <Popup>终点</Popup> */}
+            <Popup>终点</Popup>
           </Marker>
         </>
       )}
