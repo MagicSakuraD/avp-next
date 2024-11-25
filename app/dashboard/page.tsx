@@ -14,10 +14,10 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import LeafletMap from "@/app/dashboard/LeafletMap";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
 import useMqtt from "@/lib/mqtt";
+import dynamic from "next/dynamic";
 import {
   Dialog,
   DialogContent,
@@ -31,6 +31,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+
+const LeafletMap = dynamic(() => import("./LeafletMap"), {
+  ssr: false, // 禁用服务器端渲染
+});
 
 export default function Page() {
   const [isParkInDialogOpen, setIsParkInDialogOpen] = useState(false);
