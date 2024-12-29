@@ -2,8 +2,39 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-第一步：运行 Dockerfile，构建镜像容器
-第二步：运行 run_docker.sh,启动容器, 查看网站地址 http://localhost:3000，
+以下是改进后的 GitHub README，适配 Markdown 格式并添加命令行部分的适当格式：
+
+````markdown
+## 使用 Docker 构建和运行 Next.js 项目
+
+### 第一步：构建镜像容器
+
+运行以下命令以构建镜像：
+
+```bash
+docker build -t nextjs-docker .
+```
+````
+
+### 第二步：启动容器
+
+运行 `run_docker.sh` 脚本以启动容器：
+
+```bash
+sh run_docker.sh
+```
+
+### 第三步：访问网站
+
+启动完成后，访问以下地址查看网站：
+
+```
+http://localhost:3000
+```
+
+```
+
+你可以将此 README 文件添加到你的项目中，便于其他开发者快速了解如何运行项目。
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
@@ -25,3 +56,4 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
