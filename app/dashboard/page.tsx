@@ -40,6 +40,8 @@ export default function Page() {
   const [isParkInDialogOpen, setIsParkInDialogOpen] = useState(false);
   const [isParkOutDialogOpen, setIsParkOutDialogOpen] = useState(false);
   const [licensePlate, setLicensePlate] = useState("LMWS81S56N1S00011");
+  const [isSubscribe, setIsSubscribe] = useState(false);
+  const [obstacles, setObstacles] = useState<Array<[number, number]>>([]);
   const [isShow, setIsShow] = useState(false);
   const { toast } = useToast();
   const [points, setPoints] = useState<Array<[number, number]>>([]);
@@ -163,6 +165,10 @@ export default function Page() {
   };
 
   useEffect(() => {
+    subscribe(`/perception/obstacles`);
+    subscribe(`/perception/vehicles`);
+    console.log("subscribe obstacles and vehicles");
+
     if (connectionStatus.connected) {
       console.log("connected subscribe");
       subscribe(`/ec/ind/vehicle_localization/${licensePlate}/111`);
@@ -172,6 +178,9 @@ export default function Page() {
     return () => {
       unsubscribe(`/ec/ind/vehicle_localization/${licensePlate}/111`);
       unsubscribe(`/ec/ind/new_route/${licensePlate}/111`);
+      unsubscribe(`/perception/obstacles`);
+      unsubscribe(`/perception/vehicles`);
+      console.log("unsubscribe all");
     };
   }, [isShow]);
 
@@ -200,6 +209,22 @@ export default function Page() {
               );
               setPoints(newPoints);
             }
+          } else if (topic === `/perception/obstacles`) {
+            console.log("obstacles:", parsedMessage);
+            console.log("obstacles payload:", parsedMessage.payload);
+            if (parsedMessage) {
+            }
+            const obstaclesData = parsedMessage.payload.map(
+              (obstacle: { id: string; polygon: Array<[number, number]> }) => ({
+                id: obstacle.id,
+                polygon: obstacle.polygon,
+              })
+            );
+            console.log("obstaclesData:", obstaclesData);
+            setObstacles(obstaclesData);
+          } else if (topic === `/perception/vehicles`) {
+            console.log("vehicles:", parsedMessage);
+            console.log("vehicles payload:", parsedMessage.payload);
           }
         } catch (error) {
           console.error("Failed to parse message:", error);
@@ -235,6 +260,7 @@ export default function Page() {
             points={points}
             geoJsonPath="/map.geojson"
             carInfo={carInfo}
+            obstacles={obstacles}
           />
 
           <div className="flex flex-row justify-evenly items-center">

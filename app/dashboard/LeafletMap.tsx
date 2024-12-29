@@ -59,6 +59,7 @@ interface LeafletMapProps {
     y: number | null;
     yaw: number | null;
   };
+  obstacles: [{ id: string; polygon: Array<[number, number]> }];
 }
 
 const entryPointIcon = L.icon({
@@ -212,6 +213,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
   points,
   geoJsonPath,
   carInfo,
+  obstacles,
 }) => {
   const [geoJsonData, setGeoJsonData] = useState<GeoJSONData | null>(null);
   useEffect(() => {
@@ -229,7 +231,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
   return (
     <MapContainer
       center={[10, 10]} // 地图中心点（可调整）
-      zoom={4} // 调整缩放级别
+      zoom={1} // 调整缩放级别
       minZoom={3}
       maxZoom={6}
       scrollWheelZoom={true}

@@ -2,17 +2,8 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
-First, run the development server:
-
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+第一步：运行 Dockerfile，构建镜像容器
+第二步：运行 run_docker.sh,启动容器, 查看网站地址 http://localhost:3000，
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
