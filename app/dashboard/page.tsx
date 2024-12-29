@@ -31,6 +31,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { Obstacle } from "./LeafletMap";
 
 const LeafletMap = dynamic(() => import("./LeafletMap"), {
   ssr: false, // 禁用服务器端渲染
@@ -41,7 +42,7 @@ export default function Page() {
   const [isParkOutDialogOpen, setIsParkOutDialogOpen] = useState(false);
   const [licensePlate, setLicensePlate] = useState("LMWS81S56N1S00011");
   const [isSubscribe, setIsSubscribe] = useState(false);
-  const [obstacles, setObstacles] = useState<Array<[number, number]>>([]);
+  const [obstacles, setObstacles] = useState<Obstacle[]>([]);
   const [isShow, setIsShow] = useState(false);
   const { toast } = useToast();
   const [points, setPoints] = useState<Array<[number, number]>>([]);
@@ -58,7 +59,7 @@ export default function Page() {
   const mqttConfig = {
     host: "192.168.1.90",
     port: 8083,
-    clientId: `avp_manager_app_id`,
+    clientId: `avp_manager_next_id`,
     protocol: "ws",
     username: "avp_manager",
     password: "123456",
@@ -165,14 +166,13 @@ export default function Page() {
   };
 
   useEffect(() => {
-    subscribe(`/perception/obstacles`);
-    subscribe(`/perception/vehicles`);
-    console.log("subscribe obstacles and vehicles");
-
     if (connectionStatus.connected) {
-      console.log("connected subscribe");
+      console.log("subscribe🪄");
+      subscribe(`/perception/obstacles`);
+      subscribe(`/perception/vehicles`);
       subscribe(`/ec/ind/vehicle_localization/${licensePlate}/111`);
       subscribe(`/ec/ind/new_route/${licensePlate}/111`);
+      setIsShow(true);
     }
 
     return () => {
@@ -182,7 +182,7 @@ export default function Page() {
       unsubscribe(`/perception/vehicles`);
       console.log("unsubscribe all");
     };
-  }, [isShow]);
+  }, [connectionStatus.connected, licensePlate]);
 
   useEffect(() => {
     if (messages) {
@@ -210,17 +210,13 @@ export default function Page() {
               setPoints(newPoints);
             }
           } else if (topic === `/perception/obstacles`) {
-            console.log("obstacles:", parsedMessage);
-            console.log("obstacles payload:", parsedMessage.payload);
-            if (parsedMessage) {
-            }
             const obstaclesData = parsedMessage.payload.map(
               (obstacle: { id: string; polygon: Array<[number, number]> }) => ({
                 id: obstacle.id,
                 polygon: obstacle.polygon,
               })
             );
-            console.log("obstaclesData:", obstaclesData);
+            // console.log("obstaclesData:", obstaclesData);
             setObstacles(obstaclesData);
           } else if (topic === `/perception/vehicles`) {
             console.log("vehicles:", parsedMessage);
@@ -231,7 +227,7 @@ export default function Page() {
         }
       });
     }
-  }, [messages]);
+  }, [messages, isShow]);
 
   return (
     <SidebarProvider>

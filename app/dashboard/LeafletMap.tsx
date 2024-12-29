@@ -28,6 +28,11 @@ function MyClick() {
   return null;
 }
 
+export interface Obstacle {
+  id: number; // 障碍物的唯一标识符
+  polygon: Array<[number, number]>; // 定义障碍物边界的坐标数组
+}
+
 interface GeoJSONFeature {
   type: string;
   properties: {
@@ -59,7 +64,7 @@ interface LeafletMapProps {
     y: number | null;
     yaw: number | null;
   };
-  obstacles: [{ id: string; polygon: Array<[number, number]> }];
+  obstacles: Obstacle[];
 }
 
 const entryPointIcon = L.icon({
@@ -119,16 +124,25 @@ function transformCRS(x: number, y: number): [number, number] {
 
   const [rotX, rotY] = rotatePoint(symX, symY, angleDegrees);
 
-  const resX = rotX + 33.6682;
+  const resX = rotX + 35.0682;
   const resY = rotY + 6.22232;
 
   return [resX, resY];
 }
 
-function transformAngle(angle: number): number {
-  const rotationAngle = -34; // 顺时针旋转34度
-  return angle + rotationAngle;
+function obstacleCRS(x: number, y: number): [number, number] {
+  //step1：旋转90度变换
+  const angleDegrees = 90;
+  const [rotX, rotY] = rotatePoint(x, y, angleDegrees);
+  const resX = rotX;
+  const resY = -rotY;
+  return [resX, resY];
 }
+
+// function transformAngle(angle: number): number {
+//   const rotationAngle = -34; // 顺时针旋转34度
+//   return angle + rotationAngle;
+// }
 
 // 添加坐标转换函数
 function transformCoordinates(lon: number, lat: number): [number, number] {
@@ -346,6 +360,16 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
             angle={-(carInfo.yaw - 34 + 360) % 360} // 修正后的角度
           />
         )}
+      {obstacles &&
+        obstacles.map((obstacle) => (
+          <Polyline
+            key={obstacle.id}
+            positions={obstacle.polygon.map(([lng, lat]) =>
+              obstacleCRS(lng, lat)
+            )}
+            pathOptions={{ color: "red", weight: 3 }}
+          />
+        ))}
     </MapContainer>
   );
 };
